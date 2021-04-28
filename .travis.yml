@@ -22,7 +22,7 @@ script:
     
 after_success:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
-  - export REPO=500061070/travis-ci
+  - export REPO=mystogan1999/nginxweb
   - export TAG=`if [ "$TRAVIS_BRANCH" == "main" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker build -f Dockerfile -t $REPO:$COMMIT .
   - docker tag $REPO:$COMMIT $REPO:$TAG
