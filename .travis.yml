@@ -1,5 +1,7 @@
 sudo: required
 
+language: ruby
+
 services:
   - docker
   
@@ -7,10 +9,20 @@ env:
   global:
     - secure: "ZyVa1CRHccxHzh2yXMHKNviYyINnW6dWFiUO5EadjV0W50UYyUjEgZ5yubDugbgKtVa8Ye1ZXFwoQCRLBxZKPaV/q/IM+n/ft4C00M+GXgkehdxUbf+xxKb9gq33MnTMF5Ym7eEihv7KvPPOepH0chEFqFPlSlRHQPXuwF5yH6x0NtQp48kCCNeFuFYiSxNUHMrPr/TuXiw6re1gH3Cx8oOy3otLWh0/6UeXXpbKjhVRdS2d8CSVcD6IQm9NhqiZDY95/Gl50nsfMsSwwPT0Chx2gAXFwQGVrIj4HeDuiq0AWXHXZpRLXovSyJfZAxbRx2LCEuixGoB6DD/KAftehykzey35SG0UsyB3KUeJo8NNvaUFzq27Y36xA94qdBgvvdrkU/mSJukBtciaCE36MD+yo0CXt+17UHkAqmCh35WJlm6yxvKSmwhyHa9ERFg/KSJdAWhZ+clUVonq70IVHEw9D+oi2RHg5dQiLoPk3tEfS7yOCumYLweE8obqez/oGs25EaE0bHPXGHsO4gd0tYs+urBbmwj4P5YiYAMzR5BK8iHsCKLJ6AKC5xcIyz7y5jAEb8nibJAflXGGJUd0yqq9b8b2QpU0ng6CEo9h90/V2QfX8p113YhWHJX1CYvAjhbnuxIW7S24pT9GmUSBrz4/o1out+yyqEU5XdBsd9g=" 
     - secure: "RhqyXAIiD05FnoeqTikSeb7k5JcvcMcJ8kxwIWK0iOUeHUyDv2Iw6H8WncSGqFVGpc86yPul3TxStWrhnheZh9c4yEGhZbhcp1nGE8J/jMUvLWCQX6jf02fnZoOIPpusYBb8gE/MFXPLTjYP58GsMN1FYjXtnKKWXL/5Z5tWjRiD2h2N6DsH4+BRSZcKrPOQqmpWadjlSzXgUYujNYg5Erpvvm6ihvtjPRrhAzpJnMxW2pJo6VynFns2LtS5twrQLthXrF12uITmI967vD30NIaYeB8bvXPh9Ka71QG9boigEPVcFQzd4ZRS5Uaa+zi/vtHpieilR25T992+oIXdVYNIJETr7uqKKYKveaXzqqk/STtQqoXiJ1OG4aBGExxnZ/oKQi1I06YOdvY4AAFQ7h03/MmqUwF70XPhYkbKxOeZHo51PIRDi97C0gwOtfhGLU5ppINQ37mWg5ay2GokZw13gixIUd9XWSEiyAIU4rnYOYkWxNp6C0PEEjIKfESfbMpVievI+DxEVcaJIN6tYdDT3SsAAeeQ1PlCcEDjvuG5qWY0RceAlecfkVfHVC1lqWeIoIifvZigQIG8RKKzcvaBRZdfMldp5DJJQZbUNGUknhm6+soqClU8SO52bKTtiKuCD/eh74Sk4txmivc0CPrBxJI4HaljZtAdw+VKx7U="
+    - secure: "foWvTXTd0E4rCD/z+rtS6fnDUFvuiayqpk30rPU03lGKdhP+osq9W9jz1oI6t7d/85PWoIsfwxKO2CsJOrJImL2pcLJopQhZkIkHP7nBt2bjQ2mPE81dhMHFNj12gRsH9wC20vfCb6Oi4hzcDn3t8UgXnCc38ik97rnwVzgyIuUCQpaoGJ6rhsJvm6a8Yw/fEXCok27gE1aLIzZfM/98+ahXB5fB25LtlicuTRNnATatCA0LPcxPbv37VrnWPa8JPvUAwpEq4Js98hENu7fz07wEXQ73tRyX1+OQ5DvRtzwEoHi7pf+7Z11oyeS/yao0bxAYu66/1NUmXwSNjjMGCYOVcnQXWSo61zbZEDjGKphhoj8nOt+r8H8IspkyZwYrLzJkJ9idiDohX3jNp4z47fLQHc+NZv30ov8PV4MZYZyquPW1K//mfjR9YiPGp0jf5mL+o/bw6UxYw/tPB0cisSUhO2nLaZBpxdq1nNBWSm+QySr7J7cCWXpoYPqwHWLKEbewDLpiau+n33jdjEB9KN7fzSqXDlMiZkLanbK0Hevbi+KopnqQ+N23+GmDlFC83M/LFJdLEcISR7a0Eiqd1eP/WU5PNSLSJ/jIqh2XkNFWcjhkehAH7gKuzvNh43CAAwioZLvIymCNBrsAOh3rJcIfbG5XssQdvOiTDhVdm0c="
     - COMMIT=${TRAVIS_COMMIT::8}
     
+before_install:
+  - echo "Testing Docker Hub credentials"
+  - docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
+  - echo "Docker Hub credentials are working"
+  - docker build -t nginxweb .
+  
+script:
+  - docker images
+    
 after_success:
-  - docker login -u $DOCKER_USER -p $DOCKER_PASS
+  - docker login -e=$DOCKER_EMAIL -u=$DOCKER_USERNAME -p=$DOCKER_PASSWORD
   - export REPO=500061070/travis-ci
   - export TAG=`if [ "$TRAVIS_BRANCH" == "main" ]; then echo "latest"; else echo $TRAVIS_BRANCH ; fi`
   - docker build -f Dockerfile -t $REPO:$COMMIT .
