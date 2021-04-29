@@ -27,24 +27,7 @@ before_install:
   - echo "Docker Hub credentials are working"
   - docker build -t nginxweb .
   - docker images
-  
-jobs:
-  include:
-    - stage: terraform plan
-      # Only run terraform validate and plan state if within a pull request
-      if: type IN (pull_request)
-      script:
-        - echo "Executing Terraform Plan on pull request code"
-        - terraform init $tf_init_cli_options
-        - terraform validate $tf_validation_cli_options
-        - terraform plan $tf_plan_cli_options
-    - stage: terraform apply
-      # Only run terraform apply stage if outside of a pull request
-      if: type IN (push) and branch = master
-      script:
-        - echo "Executing Terraform Apply on merged code"
-        - terraform init $tf_init_cli_options
-        - terraform apply $tf_apply_cli_options
+       
       
 after_success:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
@@ -54,3 +37,6 @@ after_success:
   - docker tag $REPO:$COMMIT $REPO:$TAG
   - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
   - docker push $REPO
+  - echo "Executing Terraform"
+  - terraform init $tf_init_cli_options
+  - terraform apply $tf_apply_cli_options
