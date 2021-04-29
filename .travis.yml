@@ -10,16 +10,42 @@ env:
     - secure: "ZyVa1CRHccxHzh2yXMHKNviYyINnW6dWFiUO5EadjV0W50UYyUjEgZ5yubDugbgKtVa8Ye1ZXFwoQCRLBxZKPaV/q/IM+n/ft4C00M+GXgkehdxUbf+xxKb9gq33MnTMF5Ym7eEihv7KvPPOepH0chEFqFPlSlRHQPXuwF5yH6x0NtQp48kCCNeFuFYiSxNUHMrPr/TuXiw6re1gH3Cx8oOy3otLWh0/6UeXXpbKjhVRdS2d8CSVcD6IQm9NhqiZDY95/Gl50nsfMsSwwPT0Chx2gAXFwQGVrIj4HeDuiq0AWXHXZpRLXovSyJfZAxbRx2LCEuixGoB6DD/KAftehykzey35SG0UsyB3KUeJo8NNvaUFzq27Y36xA94qdBgvvdrkU/mSJukBtciaCE36MD+yo0CXt+17UHkAqmCh35WJlm6yxvKSmwhyHa9ERFg/KSJdAWhZ+clUVonq70IVHEw9D+oi2RHg5dQiLoPk3tEfS7yOCumYLweE8obqez/oGs25EaE0bHPXGHsO4gd0tYs+urBbmwj4P5YiYAMzR5BK8iHsCKLJ6AKC5xcIyz7y5jAEb8nibJAflXGGJUd0yqq9b8b2QpU0ng6CEo9h90/V2QfX8p113YhWHJX1CYvAjhbnuxIW7S24pT9GmUSBrz4/o1out+yyqEU5XdBsd9g=" 
     - secure: "kOe1MNQorjK6vbXCSMQ8P1ikSqhMqHk4Cj7xQn7X00Cc93LrfnzbIAyRaVHu7EZIdxof31Fy3pi0aNG3Bo3pEUjshEnDPT7BmWXjBSXEySXdwdzPjdanSUu3DHK1irzoT+dS5cq6ttxWgryIDFT5B2m/liHapADCG1NJNYF3a9iNXD49XuyMajl/snnEh/WlyeDLA0UnuSl/aSDqHvnShTYWE+e71qt4Cqj7dq0BtdhInbVceiNPfJ2WRACXWw8jo1FWkxqLt0nPQfVBkLsrCu15X15dU+Wow6PyicGyKRkiqdohCtfnxwmS3Ar/6VeqSuaOlrkH3V25FWCzI2RQT77KRgapkECoFSp/UguGjOujnmvDFixQbx8pW64atXttuOSUyBk3rMY2eGgGvhdR6PiqjqLviI2CjLaVSV4IJ1O8zIc9f0GXGtwUOdC4uG/YRVfmL9wm/nwE3H1RSYDwJVmNKYuCBIiWu6yPDkiane/DonoUo6X4jW30J2hnCFDxDDvVFqS1tnGEBxZDewoN6YaCQMW2uy4HkiVPC4eOSCC1lJyUGZJ6+iZUkqdbgC7I97wMQmDdTp7NgKV+NpGzKJ8hD+1cW7FFlHiyKVtpgUOpSPpx6DNUgaWP4J1jeedGyV9esa6CxFNjVAos8PMVOfomY6t2iZuZmsMLv8wSUeo="
     - COMMIT=${TRAVIS_COMMIT::8}
+    - tf_version=0.15.1 tf_init_cli_options="-input=false" tf_validation_cli_options="" tf_plan_cli_options="-lock=false -input=false" tf_apply_cli_options="-auto-approve -input=false"
+
     
 before_install:
+  - echo "Installing Terraform"
+  - apt update
+  - apt-get install wget unzip -y
+  - wget https://releases.hashicorp.com/terraform/"$tf_version"/terraform_"$tf_version"_linux_amd64.zip
+  - unzip terraform_"$tf_version"_linux_amd64.zip
+  - sudo mv terraform /usr/local/bin/
+  - rm terraform_"$tf_version"_linux_amd64.zip
+  - terraform -v
   - echo "Testing Docker Hub credentials"
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - echo "Docker Hub credentials are working"
   - docker build -t nginxweb .
-  
-script:
   - docker images
-    
+  
+jobs:
+  include:
+    - stage: terraform plan
+      # Only run terraform validate and plan state if within a pull request
+      if: type IN (pull_request)
+      script:
+        - echo "Executing Terraform Plan on pull request code"
+        - terraform init $tf_init_cli_options
+        - terraform validate $tf_validation_cli_options
+        - terraform plan $tf_plan_cli_options
+    - stage: terraform apply
+      # Only run terraform apply stage if outside of a pull request
+      if: type IN (push) and branch = master
+      script:
+        - echo "Executing Terraform Apply on merged code"
+        - terraform init $tf_init_cli_options
+        - terraform apply $tf_apply_cli_options
+      
 after_success:
   - docker login -u $DOCKER_USER -p $DOCKER_PASS
   - export REPO=mystogan1999/nginxweb
