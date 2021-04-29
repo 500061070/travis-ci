@@ -38,7 +38,7 @@ after_success:
   - docker tag $REPO:$COMMIT $REPO:travis-$TRAVIS_BUILD_NUMBER
   - docker push $REPO
   
-#script:
- # - echo "Executing Terraform"
-  #- terraform init $tf_init_cli_options
-  #- terraform apply $tf_apply_cli_options
+script:
+  - echo "Executing Terraform"
+  - terraform init $tf_init_cli_options
+  - terraform apply $tf_apply_cli_options
